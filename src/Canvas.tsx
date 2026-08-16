@@ -102,6 +102,7 @@ export function Canvas() {
             background: doc.backgroundGradient || doc.background,
             boxShadow: 'var(--canvas-shadow)',
             outline: '1px solid var(--border)',
+            overflow: 'hidden',
           }}
           data-bg="true"
         >
