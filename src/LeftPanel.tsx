@@ -11,8 +11,8 @@ export function LeftPanel() {
   const editor = useEditor();
 
   return (
-    <div className="w-60 bg-[#26262e] border-r border-black/30 flex flex-col h-full">
-      <div className="flex flex-col gap-1 p-2 border-b border-black/30">
+    <div className="w-60 flex flex-col h-full border-r" style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)' }}>
+      <div className="flex flex-col gap-1 p-2 border-b" style={{ borderColor: 'var(--border)' }}>
         <div className="grid grid-cols-5 gap-1">
           <TabBtn icon={<Layout size={16} />} label="Design" active={tab === 'design'} onClick={() => setTab('design')} />
           <TabBtn icon={<Shapes size={16} />} label="Elements" active={tab === 'elements'} onClick={() => setTab('elements')} />
@@ -21,7 +21,7 @@ export function LeftPanel() {
           <TabBtn icon={<ImageIcon size={16} />} label="Templates" active={tab === 'templates'} onClick={() => setTab('templates')} />
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-3 text-gray-200">
+      <div className="flex-1 overflow-y-auto p-3" style={{ color: 'var(--text-primary)' }}>
         {tab === 'design' && <DesignTab editor={editor} />}
         {tab === 'elements' && <ElementsTab />}
         {tab === 'text' && <TextTab />}
@@ -36,9 +36,10 @@ function TabBtn({ icon, label, active, onClick }: { icon: React.ReactNode; label
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-1 py-2 rounded-md text-[10px] font-medium transition-colors ${
-        active ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-400 hover:bg-white/5'
-      }`}
+      className="flex flex-col items-center gap-1 py-2 rounded-md text-[10px] font-medium transition-colors"
+      style={active ? { background: 'var(--accent-bg)', color: 'var(--accent-text)' } : { color: 'var(--text-muted)' }}
+      onMouseEnter={(e) => !active && (e.currentTarget.style.background = 'var(--bg-hover)')}
+      onMouseLeave={(e) => !active && (e.currentTarget.style.background = 'transparent')}
     >
       {icon}
       {label}
@@ -50,7 +51,7 @@ function DesignTab({ editor }: { editor: ReturnType<typeof useEditor> }) {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Canvas Size</h3>
+        <h3 className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--text-muted)' }}>Canvas Size</h3>
         <div className="grid grid-cols-2 gap-2">
           {PRESET_SIZES.map((size) => (
             <button
@@ -64,28 +65,30 @@ function DesignTab({ editor }: { editor: ReturnType<typeof useEditor> }) {
                   store.newDocument(size);
                 }
               }}
-              className={`p-2 rounded-lg border text-left transition-colors ${
-                editor.document.canvas.name === size.name
-                  ? 'border-indigo-500 bg-indigo-500/10'
-                  : 'border-white/10 hover:border-white/30'
-              }`}
+              className="p-2 rounded-lg border text-left transition-colors"
+              style={editor.document.canvas.name === size.name
+                ? { borderColor: 'var(--accent)', background: 'var(--accent-bg)' }
+                : { borderColor: 'var(--border)' }}
+              onMouseEnter={(e) => editor.document.canvas.name !== size.name && (e.currentTarget.style.borderColor = 'var(--border-strong)')}
+              onMouseLeave={(e) => editor.document.canvas.name !== size.name && (e.currentTarget.style.borderColor = 'var(--border)')}
             >
-              <div className="text-xs font-medium text-gray-200">{size.name}</div>
-              <div className="text-[10px] text-gray-500">{size.width} × {size.height}</div>
+              <div className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{size.name}</div>
+              <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{size.width} × {size.height}</div>
             </button>
           ))}
         </div>
       </div>
       <div>
-        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Background</h3>
+        <h3 className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--text-muted)' }}>Background</h3>
         <div className="flex items-center gap-2">
           <input
             type="color"
             value={editor.document.background}
             onChange={(e) => store.updateDocument((doc) => ({ ...doc, background: e.target.value, backgroundGradient: null }))}
-            className="w-8 h-8 rounded cursor-pointer bg-transparent border border-white/10"
+            className="w-8 h-8 rounded cursor-pointer"
+            style={{ background: 'transparent', border: '1px solid var(--border)' }}
           />
-          <span className="text-xs text-gray-400">{editor.document.background}</span>
+          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{editor.document.background}</span>
         </div>
         <div className="mt-3 space-y-2">
           <GradientPicker />
@@ -109,21 +112,22 @@ function GradientPicker() {
   ];
   return (
     <div>
-      <div className="text-[10px] text-gray-500 mb-1">Gradients</div>
+      <div className="text-[10px] mb-1" style={{ color: 'var(--text-muted)' }}>Gradients</div>
       <div className="grid grid-cols-4 gap-2">
         {presets.map((g) => (
           <button
             key={g}
             onClick={() => store.updateDocument((doc) => ({ ...doc, backgroundGradient: g, background: '#ffffff' }))}
-            className="h-10 rounded-md border border-white/10 hover:border-white/30 transition-colors"
-            style={{ background: g }}
+            className="h-10 rounded-md border transition-colors hover:opacity-80"
+            style={{ background: g, borderColor: 'var(--border)' }}
           />
         ))}
       </div>
       {editor.document.backgroundGradient && (
         <button
           onClick={() => store.updateDocument((doc) => ({ ...doc, backgroundGradient: null }))}
-          className="mt-2 text-[10px] text-indigo-400 hover:text-indigo-300"
+          className="mt-2 text-[10px] hover:opacity-80"
+          style={{ color: 'var(--accent-text)' }}
         >
           Remove gradient
         </button>
@@ -143,7 +147,7 @@ function ElementsTab() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Shapes</h3>
+        <h3 className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--text-muted)' }}>Shapes</h3>
         <div className="grid grid-cols-2 gap-2">
           {shapes.map((s) => (
             <button
@@ -153,10 +157,13 @@ function ElementsTab() {
                 const cy = editor.document.canvas.height / 2 - 100;
                 store.addElement(createShapeElement(s.kind, cx, cy));
               }}
-              className="flex flex-col items-center gap-1 p-3 rounded-lg border border-white/10 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-colors"
+              className="flex flex-col items-center gap-1 p-3 rounded-lg border transition-colors"
+              style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'var(--accent-bg)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'transparent'; }}
             >
               {s.icon}
-              <span className="text-[10px] text-gray-400">{s.label}</span>
+              <span className="text-[10px]">{s.label}</span>
             </button>
           ))}
         </div>
@@ -175,7 +182,7 @@ function TextTab() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Add Text</h3>
+        <h3 className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--text-muted)' }}>Add Text</h3>
         <div className="space-y-2">
           {presets.map((p) => (
             <button
@@ -190,8 +197,10 @@ function TextTab() {
                 el.fontWeight = p.weight;
                 store.addElement(el);
               }}
-              className="w-full text-left px-3 py-3 rounded-lg border border-white/10 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-colors"
-              style={{ fontWeight: p.weight, fontSize: Math.min(p.size / 3, 22) }}
+              className="w-full text-left px-3 py-3 rounded-lg border transition-colors"
+              style={{ borderColor: 'var(--border)', color: 'var(--text-primary)', fontWeight: p.weight, fontSize: Math.min(p.size / 3, 22) }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'var(--accent-bg)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'transparent'; }}
             >
               {p.label}
             </button>
@@ -199,7 +208,7 @@ function TextTab() {
         </div>
       </div>
       <div>
-        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Font Combinations</h3>
+        <h3 className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--text-muted)' }}>Font Combinations</h3>
         <div className="space-y-2">
           {FONTS.slice(0, 6).map((f) => (
             <button
@@ -213,8 +222,10 @@ function TextTab() {
                 el.fontFamily = f;
                 store.addElement(el);
               }}
-              className="w-full text-left px-3 py-2 rounded-lg border border-white/10 hover:border-indigo-500/50 text-sm text-gray-300"
-              style={{ fontFamily: f }}
+              className="w-full text-left px-3 py-2 rounded-lg border text-sm transition-colors"
+              style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)', fontFamily: f }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'var(--accent-bg)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'transparent'; }}
             >
               {f}
             </button>
@@ -264,7 +275,10 @@ function UploadsTab() {
       />
       <button
         onClick={() => fileRef.current?.click()}
-        className="w-full py-3 rounded-lg border border-dashed border-white/20 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-colors text-sm text-gray-300 flex items-center justify-center gap-2"
+        className="w-full py-3 rounded-lg border border-dashed text-sm flex items-center justify-center gap-2 transition-colors"
+        style={{ borderColor: 'var(--border-strong)', color: 'var(--text-secondary)' }}
+        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'var(--accent-bg)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.background = 'transparent'; }}
       >
         <Upload size={16} /> Upload images
       </button>
@@ -294,7 +308,10 @@ function UploadsTab() {
                 };
                 img.src = src;
               }}
-              className="aspect-square rounded-lg overflow-hidden border border-white/10 hover:border-indigo-500/50 transition-colors"
+              className="aspect-square rounded-lg overflow-hidden border transition-colors"
+              style={{ borderColor: 'var(--border)' }}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--accent)')}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
             >
               <img src={src} alt="" className="w-full h-full object-cover" />
             </button>
@@ -306,16 +323,18 @@ function UploadsTab() {
 }
 
 function TemplatesTab() {
-  const editor = useEditor();
   return (
     <div className="space-y-3">
-      <h3 className="text-xs font-semibold text-gray-400 uppercase">Templates</h3>
+      <h3 className="text-xs font-semibold uppercase" style={{ color: 'var(--text-muted)' }}>Templates</h3>
       <div className="grid grid-cols-1 gap-3">
         {TEMPLATES.map((tpl) => (
           <button
             key={tpl.name}
             onClick={() => store.loadDocument(buildTemplate(tpl))}
-            className="rounded-lg overflow-hidden border border-white/10 hover:border-indigo-500/50 transition-colors text-left"
+            className="rounded-lg overflow-hidden border text-left transition-colors"
+            style={{ borderColor: 'var(--border)' }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--accent)')}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
           >
             <div
               className="aspect-video flex items-center justify-center text-white text-xs font-semibold p-2"
@@ -392,5 +411,3 @@ function buildTemplate(tpl: TemplateDef): DesignDocument {
     backgroundGradient: tpl.bg,
   };
 }
-
-

@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { store, useEditor } from './store';
 import { exportDocument, type ExportFormat } from './exporter';
+import { useTheme, themeStore } from './theme';
 import {
   Undo2, Redo2, Download, ZoomIn, ZoomOut, Maximize,
-  Sparkles, Save, FolderOpen, Trash2,
+  Sparkles, Save, FolderOpen, Trash2, Sun, Moon, Home,
 } from 'lucide-react';
 
-export function TopBar() {
+export function TopBar({ onBackHome }: { onBackHome: () => void }) {
   const editor = useEditor();
+  const theme = useTheme();
   const [exportOpen, setExportOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -23,7 +25,7 @@ export function TopBar() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${editor.document.name || 'design'}.${format}`;
+      a.download = `${editor.document.name || 'design'}.${format === 'jpeg' ? 'jpg' : format}`;
       a.click();
       URL.revokeObjectURL(url);
       setExportOpen(false);
@@ -41,21 +43,29 @@ export function TopBar() {
   };
 
   return (
-    <div className="h-12 bg-[#1a1a20] border-b border-black/40 flex items-center px-3 gap-2 text-gray-200">
-      {/* Logo */}
-      <div className="flex items-center gap-2 pr-3 border-r border-white/10">
+    <div className="h-12 flex items-center px-3 gap-2 border-b" style={{ background: 'var(--bg-app)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
+      {/* Logo + Home */}
+      <button onClick={onBackHome} className="flex items-center gap-2 pr-3 border-r transition-colors hover:opacity-80" style={{ borderColor: 'var(--border)' }}>
         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
           <Sparkles size={16} className="text-white" />
         </div>
         <span className="font-bold text-sm tracking-tight">Luma</span>
-      </div>
+      </button>
+
+      {/* Home button */}
+      <button onClick={onBackHome} className="p-1.5 rounded-md transition-colors hover:opacity-80" title="Home" style={{ color: 'var(--text-secondary)' }}>
+        <Home size={16} />
+      </button>
 
       {/* Undo/Redo */}
       <div className="flex items-center gap-1">
         <button
           disabled={!canUndo}
           onClick={() => store.undo()}
-          className="p-1.5 rounded-md hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent"
+          className="p-1.5 rounded-md transition-colors disabled:opacity-30"
+          style={{ color: 'var(--text-secondary)' }}
+          onMouseEnter={(e) => canUndo && (e.currentTarget.style.background = 'var(--bg-hover)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           title="Undo (Ctrl+Z)"
         >
           <Undo2 size={16} />
@@ -63,7 +73,10 @@ export function TopBar() {
         <button
           disabled={!canRedo}
           onClick={() => store.redo()}
-          className="p-1.5 rounded-md hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent"
+          className="p-1.5 rounded-md transition-colors disabled:opacity-30"
+          style={{ color: 'var(--text-secondary)' }}
+          onMouseEnter={(e) => canRedo && (e.currentTarget.style.background = 'var(--bg-hover)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           title="Redo (Ctrl+Shift+Z)"
         >
           <Redo2 size={16} />
@@ -76,15 +89,34 @@ export function TopBar() {
         value={editor.document.name}
         onChange={(e) => store.updateDocument((doc) => ({ ...doc, name: e.target.value }), false)}
         onBlur={() => store.updateDocument((doc) => doc, true)}
-        className="bg-transparent text-sm font-medium text-gray-200 px-2 py-1 rounded-md hover:bg-white/5 focus:bg-white/10 focus:outline-none w-40 text-center"
+        className="bg-transparent text-sm font-medium px-2 py-1 rounded-md w-40 text-center focus:outline-none"
+        style={{ color: 'var(--text-primary)' }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')}
+        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+        onFocus={(e) => (e.currentTarget.style.background = 'var(--bg-input-focus)')}
       />
 
       <div className="flex-1" />
 
+      {/* Theme toggle */}
+      <button
+        onClick={() => themeStore.toggle()}
+        className="p-1.5 rounded-md transition-colors"
+        style={{ color: 'var(--text-secondary)' }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')}
+        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+        title="Toggle theme"
+      >
+        {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+      </button>
+
       {/* Save */}
       <button
         onClick={handleSave}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm hover:bg-white/5 transition-colors"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors"
+        style={{ color: 'var(--text-secondary)' }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')}
+        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
       >
         <Save size={14} />
         {saved ? 'Saved!' : 'Save'}
@@ -93,7 +125,10 @@ export function TopBar() {
       {/* Projects */}
       <button
         onClick={() => setProjectsOpen(!projectsOpen)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm hover:bg-white/5 transition-colors"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors"
+        style={{ color: 'var(--text-secondary)' }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')}
+        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
       >
         <FolderOpen size={14} /> Projects
       </button>
@@ -102,25 +137,26 @@ export function TopBar() {
       <div className="relative">
         <button
           onClick={() => setExportOpen(!exportOpen)}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm bg-indigo-500 hover:bg-indigo-600 text-white font-medium transition-colors"
+          className="flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm text-white font-medium transition-all hover:scale-105"
+          style={{ background: 'var(--accent)' }}
         >
           <Download size={14} /> Export
         </button>
         {exportOpen && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setExportOpen(false)} />
-            <div className="absolute right-0 top-full mt-1 w-56 bg-[#2a2a32] border border-white/10 rounded-lg shadow-xl z-50 p-2">
-              <div className="text-[10px] text-gray-500 uppercase mb-1 px-1">Export as</div>
-              {exporting && <div className="text-xs text-indigo-400 px-2 py-2">Exporting...</div>}
+            <div className="absolute right-0 top-full mt-1 w-56 rounded-lg shadow-xl z-50 p-2 border" style={{ background: 'var(--bg-panel-2)', borderColor: 'var(--border)' }}>
+              <div className="text-[10px] uppercase mb-1 px-1" style={{ color: 'var(--text-muted)' }}>Export as</div>
+              {exporting && <div className="text-xs px-2 py-2" style={{ color: 'var(--accent)' }}>Exporting...</div>}
               {!exporting && (
                 <>
                   {(['png', 'jpeg', 'webp'] as ExportFormat[]).map((fmt) => (
                     <div key={fmt}>
-                      <div className="text-[10px] text-gray-500 uppercase mt-2 mb-1 px-1">{fmt.toUpperCase()}</div>
+                      <div className="text-[10px] uppercase mt-2 mb-1 px-1" style={{ color: 'var(--text-muted)' }}>{fmt === 'jpeg' ? 'JPG' : fmt.toUpperCase()}</div>
                       <div className="grid grid-cols-3 gap-1">
-                        <button onClick={() => handleExport(fmt, 1)} className="px-2 py-1.5 rounded-md text-xs bg-white/5 hover:bg-white/10">1x</button>
-                        <button onClick={() => handleExport(fmt, 2)} className="px-2 py-1.5 rounded-md text-xs bg-white/5 hover:bg-white/10">2x</button>
-                        <button onClick={() => handleExport(fmt, 3)} className="px-2 py-1.5 rounded-md text-xs bg-white/5 hover:bg-white/10">3x</button>
+                        <button onClick={() => handleExport(fmt, 1)} className="px-2 py-1.5 rounded-md text-xs transition-colors" style={{ background: 'var(--bg-input)', color: 'var(--text-primary)' }} onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')} onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--bg-input)')}>1x</button>
+                        <button onClick={() => handleExport(fmt, 2)} className="px-2 py-1.5 rounded-md text-xs transition-colors" style={{ background: 'var(--bg-input)', color: 'var(--text-primary)' }} onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')} onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--bg-input)')}>2x</button>
+                        <button onClick={() => handleExport(fmt, 3)} className="px-2 py-1.5 rounded-md text-xs transition-colors" style={{ background: 'var(--bg-input)', color: 'var(--text-primary)' }} onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')} onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--bg-input)')}>3x</button>
                       </div>
                     </div>
                   ))}
@@ -139,12 +175,12 @@ export function TopBar() {
 export function ZoomBar() {
   const editor = useEditor();
   return (
-    <div className="h-9 bg-[#1a1a20] border-t border-black/40 flex items-center justify-center px-4 gap-3 text-gray-400 text-xs">
-      <button onClick={() => store.setZoom(editor.zoom - 0.1)} className="p-1 rounded hover:bg-white/5">
+    <div className="h-9 flex items-center justify-center px-4 gap-3 text-xs border-t" style={{ background: 'var(--bg-app)', borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>
+      <button onClick={() => store.setZoom(editor.zoom - 0.1)} className="p-1 rounded transition-colors hover:opacity-80" style={{ background: 'var(--bg-hover)' }}>
         <ZoomOut size={14} />
       </button>
       <span className="w-12 text-center">{Math.round(editor.zoom * 100)}%</span>
-      <button onClick={() => store.setZoom(editor.zoom + 0.1)} className="p-1 rounded hover:bg-white/5">
+      <button onClick={() => store.setZoom(editor.zoom + 0.1)} className="p-1 rounded transition-colors hover:opacity-80" style={{ background: 'var(--bg-hover)' }}>
         <ZoomIn size={14} />
       </button>
       <button
@@ -157,11 +193,11 @@ export function ZoomBar() {
           store.setZoom(Math.max(0.05, Math.min(z, 2)));
           store.setPan(0, 0);
         }}
-        className="flex items-center gap-1 px-2 py-1 rounded hover:bg-white/5"
+        className="flex items-center gap-1 px-2 py-1 rounded transition-colors hover:opacity-80" style={{ background: 'var(--bg-hover)' }}
       >
         <Maximize size={12} /> Fit
       </button>
-      <span className="text-gray-600">|</span>
+      <span style={{ color: 'var(--text-dim)' }}>|</span>
       <span>{editor.document.canvas.width} × {editor.document.canvas.height}px</span>
     </div>
   );
@@ -172,15 +208,15 @@ function ProjectsModal({ onClose }: { onClose: () => void }) {
   const [, forceUpdate] = useState(0);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center" onClick={onClose}>
-      <div className="bg-[#26262e] rounded-xl border border-white/10 w-[600px] max-h-[80vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-bold text-gray-100 mb-4">Your Projects</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'var(--overlay)' }} onClick={onClose}>
+      <div className="rounded-xl border w-[600px] max-h-[80vh] overflow-y-auto p-6" style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-lg font-bold mb-4">Your Projects</h2>
         {projects.length === 0 ? (
-          <p className="text-gray-500 text-sm">No saved projects yet. Your designs auto-save as you work.</p>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No saved projects yet. Your designs auto-save as you work.</p>
         ) : (
           <div className="grid grid-cols-3 gap-4">
             {projects.map((p) => (
-              <div key={p.id} className="rounded-lg border border-white/10 overflow-hidden hover:border-indigo-500/50 transition-colors">
+              <div key={p.id} className="rounded-lg border overflow-hidden transition-colors" style={{ borderColor: 'var(--border)' }} onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--accent)')} onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}>
                 <button
                   onClick={() => {
                     store.loadDocument(p.document);
@@ -189,14 +225,14 @@ function ProjectsModal({ onClose }: { onClose: () => void }) {
                   className="w-full text-left"
                 >
                   <div
-                    className="aspect-square flex items-center justify-center text-white text-xs font-semibold p-2"
-                    style={{ background: p.document.backgroundGradient || p.document.background }}
+                    className="aspect-square flex items-center justify-center text-xs font-semibold p-2"
+                    style={{ background: p.document.backgroundGradient || p.document.background, color: 'var(--text-primary)' }}
                   >
                     {p.document.elements.length === 0 ? 'Empty' : `${p.document.elements.length} elements`}
                   </div>
                   <div className="p-2">
-                    <div className="text-sm font-medium text-gray-200 truncate">{p.name}</div>
-                    <div className="text-[10px] text-gray-500">{new Date(p.updatedAt).toLocaleDateString()}</div>
+                    <div className="text-sm font-medium truncate">{p.name}</div>
+                    <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{new Date(p.updatedAt).toLocaleDateString()}</div>
                   </div>
                 </button>
                 <button
@@ -205,7 +241,10 @@ function ProjectsModal({ onClose }: { onClose: () => void }) {
                     setProjects(store.getProjects());
                     forceUpdate((n) => n + 1);
                   }}
-                  className="w-full py-1 text-[10px] text-red-400 hover:bg-red-500/10 flex items-center justify-center gap-1 border-t border-white/5"
+                  className="w-full py-1 text-[10px] flex items-center justify-center gap-1 border-t transition-colors"
+                  style={{ color: 'var(--danger)', borderColor: 'var(--border)' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(248,113,113,0.1)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                 >
                   <Trash2 size={10} /> Delete
                 </button>
@@ -213,7 +252,7 @@ function ProjectsModal({ onClose }: { onClose: () => void }) {
             ))}
           </div>
         )}
-        <button onClick={onClose} className="mt-4 text-sm text-gray-400 hover:text-gray-200">Close</button>
+        <button onClick={onClose} className="mt-4 text-sm transition-colors hover:opacity-80" style={{ color: 'var(--text-secondary)' }}>Close</button>
       </div>
     </div>
   );

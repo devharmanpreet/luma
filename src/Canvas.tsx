@@ -81,10 +81,10 @@ export function Canvas() {
   return (
     <div
       ref={containerRef}
-      className="relative flex-1 overflow-hidden bg-[#1e1e24] select-none"
+      className="relative flex-1 overflow-hidden select-none"
       onMouseDown={handleMouseDown}
       onWheel={onWheel}
-      style={{ cursor: isPanning ? 'grabbing' : 'default' }}
+      style={{ cursor: isPanning ? 'grabbing' : 'default', background: 'var(--bg-canvas-area)' }}
     >
       <div
         className="absolute"
@@ -95,11 +95,13 @@ export function Canvas() {
         }}
       >
         <div
-          className="relative shadow-2xl"
+          className="relative"
           style={{
             width: canvasW,
             height: canvasH,
             background: doc.backgroundGradient || doc.background,
+            boxShadow: 'var(--canvas-shadow)',
+            outline: '1px solid var(--border)',
           }}
           data-bg="true"
         >

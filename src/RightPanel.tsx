@@ -1,5 +1,5 @@
 import { store, useEditor } from './store';
-import type { DesignElement, ImageElement, TextElement, ShapeElement, ImageAdjustments } from './types';
+import type { DesignElement, ImageElement, TextElement, ShapeElement } from './types';
 import { QUICK_LOOKS, FONTS } from './types';
 import { applyQuickLook, resetAdjustments } from './filters';
 import {
@@ -15,12 +15,12 @@ export function RightPanel() {
   const single = selected.length === 1 ? selected[0] : null;
 
   return (
-    <div className="w-64 bg-[#26262e] border-l border-black/30 flex flex-col h-full">
+    <div className="w-64 flex flex-col h-full border-l" style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)' }}>
       <div className="flex-1 overflow-y-auto">
         {single ? (
           <PropertiesPanel el={single} />
         ) : (
-          <div className="p-4 text-center text-gray-500 text-sm">
+          <div className="p-4 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
             {selected.length === 0
               ? 'Select an element to edit its properties'
               : `${selected.length} elements selected`}
@@ -34,9 +34,9 @@ export function RightPanel() {
 
 function PropertiesPanel({ el }: { el: DesignElement }) {
   return (
-    <div className="p-3 space-y-4 text-gray-200">
+    <div className="p-3 space-y-4" style={{ color: 'var(--text-primary)' }}>
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-gray-400 uppercase">{el.type} Properties</h3>
+        <h3 className="text-xs font-semibold uppercase" style={{ color: 'var(--text-muted)' }}>{el.type} Properties</h3>
         <div className="flex items-center gap-1">
           <IconBtn onClick={() => store.updateElement(el.id, { locked: !el.locked })} title={el.locked ? 'Unlock' : 'Lock'}>
             {el.locked ? <Lock size={14} /> : <Unlock size={14} />}
@@ -53,7 +53,6 @@ function PropertiesPanel({ el }: { el: DesignElement }) {
         </div>
       </div>
 
-      {/* Position & Size */}
       <Section title="Position & Size">
         <div className="grid grid-cols-2 gap-2">
           <NumberField label="X" value={Math.round(el.x)} onChange={(v) => store.updateElement(el.id, { x: v })} />
@@ -73,7 +72,6 @@ function PropertiesPanel({ el }: { el: DesignElement }) {
       {el.type === 'image' && <ImageProperties el={el} />}
       {el.type === 'shape' && <ShapeProperties el={el} />}
 
-      {/* Arrange */}
       <Section title="Arrange">
         <div className="grid grid-cols-4 gap-1">
           <IconBtn onClick={() => store.reorderElement(el.id, 'front')} title="Bring to front"><ChevronUp size={14} /><ChevronUp size={14} className="-mt-2" /></IconBtn>
@@ -93,16 +91,20 @@ function TextProperties({ el }: { el: TextElement }) {
         value={el.text}
         onChange={(e) => store.updateElement(el.id, { text: e.target.value }, false)}
         onBlur={() => store.updateElement(el.id, {}, true)}
-        className="w-full bg-black/30 border border-white/10 rounded-md p-2 text-sm text-gray-200 resize-none focus:outline-none focus:border-indigo-500"
+        className="w-full border rounded-md p-2 text-sm resize-none focus:outline-none"
+        style={{ background: 'var(--bg-input)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+        onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent)')}
+        onBlurCapture={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
         rows={3}
       />
       <div className="grid grid-cols-2 gap-2 mt-2">
         <div>
-          <label className="text-[10px] text-gray-500">Font</label>
+          <label className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Font</label>
           <select
             value={el.fontFamily}
             onChange={(e) => store.updateElement(el.id, { fontFamily: e.target.value })}
-            className="w-full bg-black/30 border border-white/10 rounded-md px-2 py-1 text-xs text-gray-200"
+            className="w-full border rounded-md px-2 py-1 text-xs"
+            style={{ background: 'var(--bg-input)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
           >
             {FONTS.map((f) => <option key={f} value={f}>{f}</option>)}
           </select>
@@ -119,13 +121,13 @@ function TextProperties({ el }: { el: TextElement }) {
         <IconBtn active={el.align === 'right'} onClick={() => store.updateElement(el.id, { align: 'right' })}><AlignRight size={14} /></IconBtn>
       </div>
       <div className="mt-2">
-        <label className="text-[10px] text-gray-500">Color</label>
+        <label className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Color</label>
         <ColorRow value={el.color} onChange={(c) => store.updateElement(el.id, { color: c })} />
       </div>
       <div className="mt-2">
-        <label className="text-[10px] text-gray-500">Background</label>
+        <label className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Background</label>
         <ColorRow value={el.backgroundColor === 'transparent' ? '#ffffff' : el.backgroundColor} onChange={(c) => store.updateElement(el.id, { backgroundColor: c })} />
-        <button onClick={() => store.updateElement(el.id, { backgroundColor: 'transparent' })} className="text-[10px] text-indigo-400 mt-1">Transparent</button>
+        <button onClick={() => store.updateElement(el.id, { backgroundColor: 'transparent' })} className="text-[10px] mt-1 hover:opacity-80" style={{ color: 'var(--accent-text)' }}>Transparent</button>
       </div>
       <div className="mt-2">
         <SliderField label="Line Height" value={el.lineHeight} min={0.8} max={3} step={0.1} onChange={(v) => store.updateElement(el.id, { lineHeight: v }, false)} />
@@ -150,11 +152,13 @@ function ImageProperties({ el }: { el: ImageElement }) {
                 const newAdj = applyQuickLook(a, ql.id);
                 store.updateElement(el.id, { adjustments: newAdj });
               }}
-              className={`px-2 py-2 rounded-md text-[10px] font-medium border transition-colors ${
-                a.quickLook === ql.id
-                  ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300'
-                  : 'border-white/10 text-gray-400 hover:border-white/30'
-              }`}
+              className="px-2 py-2 rounded-md text-[10px] font-medium border transition-colors"
+              style={a.quickLook === ql.id
+                ? { borderColor: 'var(--accent)', background: 'var(--accent-bg)', color: 'var(--accent-text)' }
+                : { borderColor: 'var(--border)', color: 'var(--text-muted)' }
+              }
+              onMouseEnter={(e) => a.quickLook !== ql.id && (e.currentTarget.style.borderColor = 'var(--border-strong)')}
+              onMouseLeave={(e) => a.quickLook !== ql.id && (e.currentTarget.style.borderColor = 'var(--border)')}
             >
               {ql.name}
             </button>
@@ -162,7 +166,8 @@ function ImageProperties({ el }: { el: ImageElement }) {
         </div>
         <button
           onClick={() => store.updateElement(el.id, { adjustments: resetAdjustments() })}
-          className="mt-2 text-[10px] text-indigo-400 hover:text-indigo-300"
+          className="mt-2 text-[10px] hover:opacity-80"
+          style={{ color: 'var(--accent-text)' }}
         >
           Reset all adjustments
         </button>
@@ -195,11 +200,11 @@ function ShapeProperties({ el }: { el: ShapeElement }) {
     <Section title="Shape">
       <div className="space-y-2">
         <div>
-          <label className="text-[10px] text-gray-500">Fill</label>
+          <label className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Fill</label>
           <ColorRow value={el.fill} onChange={(c) => store.updateElement(el.id, { fill: c })} />
         </div>
         <div>
-          <label className="text-[10px] text-gray-500">Stroke</label>
+          <label className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Stroke</label>
           <ColorRow value={el.stroke === 'transparent' ? '#ffffff' : el.stroke} onChange={(c) => store.updateElement(el.id, { stroke: c })} />
         </div>
         <SliderField label="Stroke Width" value={el.strokeWidth} min={0} max={50} onChange={(v) => store.updateElement(el.id, { strokeWidth: v }, false)} />
@@ -215,33 +220,39 @@ function LayersPanel() {
   const editor = useEditor();
   const elements = [...editor.document.elements].reverse();
   return (
-    <div className="border-t border-black/30 max-h-48 overflow-y-auto">
-      <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-400 uppercase sticky top-0 bg-[#26262e]">
+    <div className="border-t max-h-48 overflow-y-auto" style={{ borderColor: 'var(--border)' }}>
+      <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold uppercase sticky top-0" style={{ color: 'var(--text-muted)', background: 'var(--bg-panel)' }}>
         <LayersIcon size={12} /> Layers
       </div>
       <div className="px-2 pb-2 space-y-1">
         {elements.length === 0 && (
-          <div className="text-[10px] text-gray-600 px-2 py-1">No layers yet</div>
+          <div className="text-[10px] px-2 py-1" style={{ color: 'var(--text-dim)' }}>No layers yet</div>
         )}
         {elements.map((el) => (
           <div
             key={el.id}
             onClick={() => store.select([el.id])}
-            className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-xs ${
-              editor.selectedIds.includes(el.id) ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-400 hover:bg-white/5'
-            }`}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-xs transition-colors"
+            style={editor.selectedIds.includes(el.id)
+              ? { background: 'var(--accent-bg)', color: 'var(--accent-text)' }
+              : { color: 'var(--text-secondary)' }
+            }
+            onMouseEnter={(e) => !editor.selectedIds.includes(el.id) && (e.currentTarget.style.background = 'var(--bg-hover)')}
+            onMouseLeave={(e) => !editor.selectedIds.includes(el.id) && (e.currentTarget.style.background = 'transparent')}
           >
-            <span className="text-[10px] text-gray-500 uppercase">{el.type === 'shape' ? el.shape : el.type}</span>
+            <span className="text-[10px] uppercase" style={{ color: 'var(--text-muted)' }}>{el.type === 'shape' ? el.shape : el.type}</span>
             <span className="flex-1 truncate">{el.type === 'text' ? el.text.slice(0, 20) : el.name}</span>
             <button
               onClick={(e) => { e.stopPropagation(); store.updateElement(el.id, { hidden: !el.hidden }); }}
-              className="text-gray-500 hover:text-gray-300"
+              className="hover:opacity-80"
+              style={{ color: 'var(--text-muted)' }}
             >
               {el.hidden ? <EyeOff size={12} /> : <Eye size={12} />}
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); store.updateElement(el.id, { locked: !el.locked }); }}
-              className="text-gray-500 hover:text-gray-300"
+              className="hover:opacity-80"
+              style={{ color: 'var(--text-muted)' }}
             >
               {el.locked ? <Lock size={12} /> : <Unlock size={12} />}
             </button>
@@ -255,7 +266,7 @@ function LayersPanel() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h4 className="text-[10px] font-semibold text-gray-500 uppercase mb-2">{title}</h4>
+      <h4 className="text-[10px] font-semibold uppercase mb-2" style={{ color: 'var(--text-muted)' }}>{title}</h4>
       {children}
     </div>
   );
@@ -264,12 +275,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function NumberField({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
     <div>
-      <label className="text-[10px] text-gray-500">{label}</label>
+      <label className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{label}</label>
       <input
         type="number"
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-        className="w-full bg-black/30 border border-white/10 rounded-md px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-indigo-500"
+        className="w-full border rounded-md px-2 py-1 text-xs focus:outline-none"
+        style={{ background: 'var(--bg-input)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+        onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent)')}
+        onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
       />
     </div>
   );
@@ -283,8 +297,8 @@ function SliderField({
   return (
     <div className="mb-2">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] text-gray-500 flex items-center gap-1">{icon}{label}</span>
-        <span className="text-[10px] text-gray-400">{Math.round(value * 10) / 10}{suffix}</span>
+        <span className="text-[10px] flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>{icon}{label}</span>
+        <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{Math.round(value * 10) / 10}{suffix}</span>
       </div>
       <input
         type="range"
@@ -293,7 +307,7 @@ function SliderField({
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full accent-indigo-500"
+        className="w-full"
       />
     </div>
   );
@@ -306,13 +320,17 @@ function ColorRow({ value, onChange }: { value: string; onChange: (c: string) =>
         type="color"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-8 h-8 rounded cursor-pointer bg-transparent border border-white/10"
+        className="w-8 h-8 rounded cursor-pointer"
+        style={{ background: 'transparent', border: '1px solid var(--border)' }}
       />
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="flex-1 bg-black/30 border border-white/10 rounded-md px-2 py-1 text-xs text-gray-200 font-mono"
+        className="flex-1 border rounded-md px-2 py-1 text-xs font-mono focus:outline-none"
+        style={{ background: 'var(--bg-input)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+        onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent)')}
+        onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
       />
     </div>
   );
@@ -327,9 +345,13 @@ function IconBtn({
     <button
       onClick={onClick}
       title={title}
-      className={`p-1.5 rounded-md transition-colors ${
-        active ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
-      }`}
+      className="p-1.5 rounded-md transition-colors"
+      style={active
+        ? { background: 'var(--accent-bg)', color: 'var(--accent-text)' }
+        : { color: 'var(--text-secondary)' }
+      }
+      onMouseEnter={(e) => !active && (e.currentTarget.style.background = 'var(--bg-hover)')}
+      onMouseLeave={(e) => !active && (e.currentTarget.style.background = 'transparent')}
     >
       {children}
     </button>
